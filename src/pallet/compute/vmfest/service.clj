@@ -401,6 +401,8 @@ Accessible means that VirtualBox itself can access the machine. In
 
 (declare-bootstrap-via-ssh)
 
+(declare node-destroy)
+
 (defn- create-node
   "Instantiates a compute node on vmfest and runs the supplied init script.
 
@@ -430,7 +432,7 @@ Accessible means that VirtualBox itself can access the machine. In
     (let [connected-slots (connected-network-slots model)]
       (when (and (not (wait-for-all-ips machine connected-slots))
                  (:destroy-on-ip-fail node-spec true))
-        (manager/destroy machine)
+        (node-destroy machine)
         (throw (ex-info
                 "Could not determine IP address of new node"
                 {:type :no-ip-available}))))
@@ -457,7 +459,7 @@ Accessible means that VirtualBox itself can access the machine. In
                                                   image node user init-script)]
                 (when-not (zero? exit)
                   (when (:destroy-on-bootstrap-fail node-spec true)
-                    (manager/destroy machine))
+                    (node-destroy machine))
                   (throw (ex-info
                           (format "Bootstrap failed: %s" out)
                           {:type :pallet/bootstrap-failure
@@ -805,8 +807,8 @@ Accessible means that VirtualBox itself can access the machine. In
                                   nat-rules
                                   local-interface
                                   bridged-interface)]
-        (logging/debug
-         "Final network config: type %s bridged-if %s local-if %s nat-rules"
+        (logging/debugf
+         "Final network config: type %s bridged-if %s local-if %s nat-rules %s"
          network-type bridged-interface local-interface nat-rules)
         (logging/debug (str "current-machine-names " current-machine-names))
         (logging/debug (str "target-machine-names " target-machine-names))
